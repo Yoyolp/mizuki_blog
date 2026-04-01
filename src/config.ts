@@ -288,22 +288,22 @@ export const navBarConfig: NavBarConfig = {
 			children: [
 				{
 					name: "GitHub",
-					url: "https://github.com/matsuzaka-yuki/Mizuki",
+					url: "https://github.com/Yoyolp",
 					external: true,
 					icon: "fa7-brands:github",
 				},
 				{
 					name: "Bilibili",
-					url: "https://space.bilibili.com/701864046",
+					url: "https://space.bilibili.com/660582986",
 					external: true,
 					icon: "fa7-brands:bilibili",
 				},
-				{
+				/* {
 					name: "Gitee",
 					url: "https://gitee.com/matsuzakayuki/Mizuki",
 					external: true,
 					icon: "mdi:git",
-				},
+				}, */
 			],
 		},
 		{
@@ -390,21 +390,16 @@ export const profileConfig: ProfileConfig = {
 			icon: "fa7-brands:bilibili",
 			url: "https://space.bilibili.com/660582986",
 		},
-		// {
-		// 	name: "Gitee",
-		// 	icon: "mdi:git",
-		// 	url: "https://gitee.com/matsuzakayuki",
-		// },
 		{
 			name: "GitHub",
 			icon: "fa7-brands:github",
 			url: "https://github.com/Yoyolp",
 		},
-		{
+		/* {
 			name: "Codeberg",
 			icon: "simple-icons:codeberg",
 			url: "https://codeberg.org",
-		},
+		}, */
 		// {
 		// 	name: "Discord",
 		// 	icon: "fa7-brands:discord",
@@ -693,13 +688,13 @@ export const pioConfig: import("./types/config").PioConfig = {
 			"HENTAI! 八嘎雅鹿!",
 			"巴巴博一",
 		], // 触摸提示
-		home: "Click here to go back to homepage!", // 首页提示
-		skin: ["Want to see my new outfit?", "The new outfit looks great~"], // 换装提示
+		home: "点这里回到 home 页面", // 首页提示
+		skin: ["想不想看看额滴代派服装", "代派啊老铁"], // 换装提示
 		close: "QWQ See you next time~", // 关闭提示
-		link: "https://github.com/matsuzaka-yuki/Mizuki", // 关于链接
+		link: "https://github.com/Yoyolp", // 关于链接
 	},
 };
-
+// https://github.com/matsuzaka-yuki/Mizuki
 // 相关文章配置
 export const relatedPostsConfig: RelatedPostsConfig = {
 	enable: true,

@@ -2,6 +2,21 @@ import type { TimelineItem } from "../components/features/timeline/types";
 
 export const timelineData: TimelineItem[] = [
 	{
+		id: "test",
+		title: "test",
+		description: "test",
+		location: "HeBei",
+		skills: ["None"],
+		achievements: [
+			"None"
+		],
+		icon: "material-symbols:school",
+		color: "#059669",
+		featured: true,
+		type: "education",
+		startDate: "2026-04-01"
+	}
+/* 	{
 		id: "current-study",
 		title: "Studying Computer Science and Technology",
 		description:
@@ -182,5 +197,5 @@ export const timelineData: TimelineItem[] = [
 		],
 		icon: "material-symbols:code",
 		color: "#7C3AED",
-	},
+	} */,
 ];
