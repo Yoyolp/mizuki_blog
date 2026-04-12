@@ -1,7 +1,7 @@
 ---
-title: ropper&pwni
+title: ropper
 published: 2026-04-07
-description: "ropper和pwni的使用"
+description: "ropper的使用"
 tags: ["ctf", "pwn"]
 category: ctf
 draft: false
@@ -89,92 +89,4 @@ ropper --file ./challenge --chain execve
 # 自定义命令
 ropper --file ./challenge --chain "execve cmd=/bin/cat flag.txt"
 
-```
-
-## pwni
-
-pwni 是一个简单的 libc 管理工具，可以自动识别，下载和修补二进制文件所使用的libc 版本
-
-## 命令用法
-
-### 1. 识别 libc 版本
-```bash
-pwni parse -l <libc文件路径>
-
-# eg.
-pwni parse -l ./libc.so.6
-```
-
-***输出：***
-```txt
-发行版: ubuntu
-版本号: 2.35-0ubuntu3.10
-架构: amd64
-包名: libc6
-```
-
-### 2. 下载 libc (download) 
-根据提供的 libc.so.6 文件，自动下载完整的libc 包
-```bash
-pwni download -l <libc文件路径> [--cache-dir <缓存目录>]
-
-# eg.
-# 基本用法
-pwni download -l ./libc.so.6
-
-# 指定缓存目录
-pwni download -l ./libc.so.6 --cache-dir ./my_cache
-```
-
-***输出:***
-```txt
-[*] 分析 libc 文件： ./libc.so.6
-[+] 识别到版本: ubuntu 2.35-0ubuntu3.10 (amd64)
-[*] 开始下载libc: ubuntu 2.35-0ubuntu3.10 (amd64)
-[+] 下载完成，文件保存在: /home/user/.cache/pwni-cache/ubuntu_2.35-0ubuntu3.10_amd64
-```
-
-### 3.自动 patchelf
-```bash
-pwni fix -l <libc文件路径> -b <二进制文件> [-o <输出目录>] [--cache-dir <缓存目录>]
-```
-
-**参数说明:**
-
-* -l, --libc：提供的 libc.so.6 文件路径（必需）
-* -b, --binary：需要修补的二进制文件路径（必需）
-* -o, --output：输出目录，用于存放下载的 libc 和 ld（可选）
-* --cache-dir：自定义缓存目录（可选，默认 ~/.cache/pwni-cache）
-
-**示例:**
-```bash
-# 基本用法（使用默认缓存）
-pwni fix -l ./libc.so.6 -b ./pwn
-
-# 指定输出目录
-pwni fix -l ./libc.so.6 -b ./pwn -o ./libs
-
-# 完整示例
-pwni fix -l ./test/libc.so.6 -b ./test/pwn -o ./output
-```
-### 安装
-
-```bash
-# 依赖
-# Ubuntu/Debian
-sudo apt-get update
-sudo apt-get install -y patchelf binutils zstd
-# 验证安装
-patchelf --version
-zstd --version
-strings --version
-
-git clone https://github.com/Yoyolp/pwni.git
-cd ./pwni/
-
-python -m venv venv
-pip install -r ./requirements.txt
-pyinstaller --onefile --name pwni --console --clean --noconfirm pwni.py
-
-sudo cp ./dist/pwni /bin/  #目录任意
 ```
