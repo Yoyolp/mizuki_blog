@@ -12,7 +12,6 @@ Ropper 是一个功能强大的二进制文件分析和 ROP（Return-Oriented Pr
 
 ### 安装
 
-
 ```bash
 pip install ropper
 ```
