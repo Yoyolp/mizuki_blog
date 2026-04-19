@@ -1,14 +1,13 @@
 ---
 title: unlink
-published: 2026-04-12
+published: 2026-04-19
 description: "unlink"
 tags: ["ctfwp", "heap"]
 category: ctf
 draft: false
 ---
-
-
 ## 什么是 unlink
+
 * **Glibc** 会倾向于把两个不需要的内存空间合并，来避免碎片化内存
 * **Unlink** 操作则是把连个物理相邻的堆块合并，变成一个新的。
 
@@ -17,6 +16,7 @@ draft: false
 :::
 
 一般来说其中的操作一般为这个流程
+
 ```txt
 FD = P -> fd
 BK = P -> bk
@@ -25,14 +25,16 @@ BK -> fd = FD
 ```
 
 ### 利用方式
+
 + 前提：存在**UAF**漏洞
-+ 受限使用 Use After-Free修改的堆块(P)的fd指针指向需要修改成\(*内存地址-12*\), 将bk指针修改成需要修稿的内容，进行**Unlink**操作, 
++ 受限使用 Use After-Free修改的堆块(P)的fd指针指向需要修改成\(*内存地址-12*\), 将bk指针修改成需要修稿的内容，进行**Unlink**操作,
 
 > `FD = p -> fd`, FD 变成了我们篡改的\(*内存地址 - 12*\)
 > `BK = p -> bk`, BK 变成我们篡改的内容 \(*需要修改的内容*\)
 > `FD -> bk = BK`, FD\(*内存地址 - 12*\) 的fd 也就是内存地址-12的+12变成了BK \(*需要修改的内容*\)
 
 ### 新版glibc 添加的防御机制
+
 ```c
 if (__builtin_expect(FD -> bk != P || BK -> fd != P, 0)) 
   malloc_printrtt (check_action, "corrupted double-linked list", P, AV);
@@ -41,15 +43,17 @@ if (__builtin_expect(FD -> bk != P || BK -> fd != P, 0))
 ```
 
 这里导致了原来的方法(32位)
+
 * `FD -> bk = target_addr - 12 + 12 = target_addr`
 * `BK -> fd = expect_value + 8`
 
-1. 首先我们通过覆盖，将**nextchunk**的`FD`执政指向了 `fakeFD`，将**nextchunk**的BK指针指向了`fakeBK`, 
+1. 首先我们通过覆盖，将**nextchunk**的 `FD`执政指向了 `fakeFD`，将**nextchunk**的BK指针指向了 `fakeBK`,
 2. 那么为了通过验证，我们需要 `fakeFD -> bk == P <=> *(fakeBK + 12) == P fakeBK -> fd == *(fakeBK + 8) == P`
 3. 当满足上述操作，可以进入 Unlink 环节，进行如下操作
-  + `fakeFD -> bk = fakeBK <=> *(fakeFD + 12) = fakeBK`
-  + `fakeBK -> fd = fakeFD <=> *(fakeBK + 8) = fakeFD`
-  + 如果让 `fakeFD + 12` 和 `fakeBK + 8` 指向同一个指向P的指针，那么`*P =  P - 8`
+
++ `fakeFD -> bk = fakeBK <=> *(fakeFD + 12) = fakeBK`
++ `fakeBK -> fd = fakeFD <=> *(fakeBK + 8) = fakeFD`
++ 如果让 `fakeFD + 12` 和 `fakeBK + 8` 指向同一个指向P的指针，那么 `*P =  P - 8`
 
 这是其中的一个可运行示例
 
@@ -154,13 +158,54 @@ int main()
 ```
 
 :::note
+
 > 设指向可 UAF 的 chunk 的指针的地址为 `ptr`
 > **32位**：
->   - 修改 `fd` 为 `ptr - 0xC`
->   - 修改 `bk` 为 `ptr - 0x8`
->   - 触发 unlink 后 `ptr` 处的指针会变成 `ptr - 0x8`
-> **64位**：
->   - 修改 `fd` 为 `ptr - 0x18`
->   - 修改 `bk` 为 `ptr - 0x10`
->   - 触发 unlink 后 `ptr` 处的指针会变成 `ptr - 0x10`
-:::
+>
+> - 修改 `fd` 为 `ptr - 0xC`
+> - 修改 `bk` 为 `ptr - 0x8`
+> - 触发 unlink 后 `ptr` 处的指针会变成 `ptr - 0x8`
+>   **64位**：
+> - 修改 `fd` 为 `ptr - 0x18`
+> - 修改 `bk` 为 `ptr - 0x10`
+> - 触发 unlink 后 `ptr` 处的指针会变成 `ptr - 0x10`
+>   :::
+
+## 常见堆块的结构
+
+```c
+struct malloc_chunk {
+    size_t mchunk_prev_size;
+    size_t mchunk_size;
+    struct malloc_chunk* fd;   // 前向指针，指向同 bin 中的下一个空闲块
+    struct malloc_chunk* bk;   // 后向指针，指向上一个空闲块
+    // 后面可能还有 fd_nextsize, bk_nextsize（仅 large bin 使用）
+};
+```
+
+
+| 字段                 | 说明                                                                                                                                                                                                                               |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **prev_size**  | 8 字节。如果前一个物理相邻的堆块是**空闲的** ，则该字段记录前一个块的大小；否则被前一个块的数据复用（用于存放用户数据）。                                                                                                    |
+| **size**       | 8 字节。记录当前块的总大小（包括头部和用户数据），按 8 或 16 字节对齐。低 3 位是标志位：``-`A`(bit 2)：非主分配区标志``-`M`(bit 1)：通过 mmap 分配``-`P`(bit 0)：前一个块是否在使用中（1=在用，0=空闲） |
+| **用户数据区** | 从 `size`字段之后开始，返回给用户使用的内存区域。                                                                                                                                                                                |
+
+> 已分配块不维护 `fd` 和 `bk` 指针，这部分空间完全被用户数据占用，以提高内存利用率。
+
+```text
+地址低位
++-------------------+   <--- chunk 起始指针
+| prev_size         |   } 固定头部 (16 字节)
++-------------------+
+| size (含标志位)   |
++-------------------+   <--- 用户数据区起始
+|                   |
+|   用户数据 /       |
+|   空闲时: fd, bk  |
+|                   |
++-------------------+
+```
+
+
+
+
